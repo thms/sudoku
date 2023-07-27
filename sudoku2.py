@@ -1,5 +1,7 @@
 from __future__ import print_function
 import random
+from functools import reduce
+
 
 # Purpose: Log events in the game, for debugging and backtracking
 class Logger:
@@ -25,7 +27,7 @@ class Field:
     self.square = square # numbered 0..8
     self.candidates = [1,2,3,4,5,6,7,8,9]
     # randomize candidates to make generating games easier
-    # random.shuffle(self.candidates)
+    random.shuffle(self.candidates)
 
   def set_value(self, value):
     self.value = value
@@ -154,7 +156,7 @@ class Grid:
     fields_set = 0
     for field in self.fields:
       if len(field.candidates) == 1 and field.value == None:
-        print('single candidate field {}-{}:{}'.format(field.row + 1, field.column + 1, field.candidates[0]))
+        #print('single candidate field {}-{}:{}'.format(field.row + 1, field.column + 1, field.candidates[0]))
         field.set_value(field.candidates[0])
         self.update_dependent_candidates(field)
         fields_set += 1
@@ -214,6 +216,11 @@ class Grid:
       fields_updated = self.set_single_candidate_fields([*range(81)])
       if fields_updated == 0:
         break
+
+  # returns True if all fields have a value assigned to them
+  def is_solved(self):
+    return all(field.value != None for field in self.fields)
+    
 
 # Randomly generate a game and then try and solve it.
 class Game:
