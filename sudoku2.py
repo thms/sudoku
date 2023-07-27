@@ -1,22 +1,40 @@
 from __future__ import print_function
 import random
 
+# Purpose: Log events in the game, for debugging and backtracking
+class Logger:
+
+  events = []
+
+  @classmethod
+  def log(cls, event):
+    cls.events.append(event)
+
+  @classmethod
+  def show(cls):
+    for event in cls.events:
+      print(event)
+
 # Represents a single field of the Sudoku board
 class Field:
   
   def __init__(self, row, column, square):
     self.value = None
-    self.row = row
-    self.column = column
-    self.square = square
+    self.row = row # numbered 0..8
+    self.column = column # numbered 0..8
+    self.square = square # numbered 0..8
     self.candidates = [1,2,3,4,5,6,7,8,9]
-    random.shuffle(self.candidates)
+    # randomize candidates to make generating games easier
+    # random.shuffle(self.candidates)
 
   def set_value(self, value):
     self.value = value
     self.candidates = []
     # log event
-    # Logger.log('[{}, {}]: {}'.format(self.row, self.column, value))
+    Logger.log('[{}, {}]: {}'.format(self.row, self.column, value))
+
+  def linear_index(self):
+    return self.row * 9 + self.column 
 
   def __repr__(self):
     if self.value:
@@ -50,7 +68,7 @@ class Grid:
 
   # returns all fields in a column from 0 - 8
   def column(self, index):
-    return self.fields[index : index + 81 : 9]
+    return self.fields[index : 81 : 9]
 
   # return all fields on a columns first, second or third subdivision
   def sub_column(self, index, sub_division):
@@ -58,13 +76,13 @@ class Grid:
 
   # returns all fields for a row from 0 - 8
   def row(self, index):
-    return self.fields[index * 9 : index * 9 + 9 : 1]
+    return self.fields[index * 9: index * 9 + 9 : 1]
 
-  # returns all fiels in a row's first, second or third subdivision
+  # returns all fields in a row's first, second or third subdivision
   def sub_row(self, index, sub_division):
     return self.row(index)[sub_division * 3 : sub_division * 3 + 3 :1]
 
-  # returns all fields in a square
+  # returns all fields in a square from 0 - 8, lef to right, then top to bottom
   def square(self, index):
     if index < 3:
       start = index * 3
@@ -121,6 +139,7 @@ class Grid:
     return False
 
   # update dependent fields candidates when setting a field's value
+  # areas are the column, row and square a field is part of
   def update_dependent_candidates(self, field):
     areas = [self.column(field.column), self.row(field.row), self.square(field.square)]
     for area in areas:
@@ -130,22 +149,21 @@ class Grid:
         except ValueError:
           pass
 
-  # iterate over all fields and set th value for those that only have a single candidate left
-  # TODO: remove from locations ....
+  # iterate over all fields and set the value for those that only have a single candidate left, where there is not already a value set
   def set_single_candidate_fields(self, locations):
-    i = 0
+    fields_set = 0
     for field in self.fields:
-      if len(field.candidates) == 1:
-        print('single candidate field {}-{}'.format(field.row, field.column))
+      if len(field.candidates) == 1 and field.value == None:
+        print('single candidate field {}-{}:{}'.format(field.row + 1, field.column + 1, field.candidates[0]))
         field.set_value(field.candidates[0])
         self.update_dependent_candidates(field)
-        locations.remove(i)
-      i += 1
+        fields_set += 1
+    return fields_set
 
 
-  # fill the grid
+  # fill the grid with a nset of numbers that do not violate the constraints
   def fill(self, fields_filled):
-    locations = range(81)
+    locations = [*range(81)]
     random.shuffle(locations)
     locations.reverse()
     tries = 0
@@ -171,16 +189,38 @@ class Grid:
         fields_filled += 1
         locations.append(location)
 
+  # Fill the grid with a given sequence to allow it to solve external puzzles
+  # values is a list of field values in order of rows, and update candidates for all fields
+  def set_values(self, values):
+    index = 0
+    for field in self.fields:
+      if values[index] == 0:
+        index += 1
+        continue
+      else:
+        field.set_value(values[index])
+        index += 1
+    
+    for field in self.fields:
+      self.update_dependent_candidates(field)
 
+  # do one step of the solution
+  # find a field that has only a single candidate, make that the value and update dependent candidates
+  # it is possible that we do not find any fields with single candidates, then we need to guess and backtrack...
+  def step(self):
+    # find and set all fields with a single candidate, until there are no more left
+    while True:
+      print('iterating single candidates')
+      fields_updated = self.set_single_candidate_fields([*range(81)])
+      if fields_updated == 0:
+        break
 
+# Randomly generate a game and then try and solve it.
 class Game:
 
-  def __init__(self, fields_filled):
+  def __init__(self):
     self.grid = Grid()
+  
+  # Set a randomized, but posssible starting point
+  def generate(self, fields_filled):
     self.grid.fill(fields_filled)
-
-game = Game(30)
-
-game.grid.draw()
-#print(game.grid.values(game.grid.row(0)))
-#print(game.grid.candidates(game.grid.row(0)))

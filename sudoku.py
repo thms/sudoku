@@ -13,7 +13,7 @@ class Logger:
   @classmethod
   def show(cls):
     for event in cls.events:
-      print event
+      print(event)
 
 
 # Represents a single field of the Sudoku board
@@ -25,7 +25,7 @@ class Field:
     self.column = column
     self.square = square
     self.candidates = [1,2,3,4,5,6,7,8,9]
-    # random.shuffle(self.candidates)
+    random.shuffle(self.candidates)
 
   def set_value(self, value):
     self.value = value
@@ -99,14 +99,14 @@ class Sudoku:
   def draw(self):
     i = 0
     for row in self.grid:
-      print row[0], row[1], row[2], '|', row[3], row[4], row[5], '|', row[6], row[7], row[8]
+      print(row[0], row[1], row[2], '|', row[3], row[4], row[5], '|', row[6], row[7], row[8])
       if i in (2,5):
-        print '---------------------'
+        print('---------------------')
       i += 1
 
   def fill(self, slots):
-    locations = range(81)
-    # random.shuffle(locations)
+    locations = [*range(81)]
+    random.shuffle(locations)
     locations.reverse()
     while slots > 0:
       try:
@@ -158,7 +158,7 @@ class Sudoku:
 
   # do one step of the solution
   # find a field that has only a single candidate, make that the value and update dependent candidates
-  # it is possible that we do not find any fields with songle candidates, then we need to guess and backtrack...
+  # it is possible that we do not find any fields with single candidates, then we need to guess and backtrack...
   def step(self):
     # find a field that only has a single candidate
     field = None
@@ -202,10 +202,11 @@ class Game:
   
 game = Game(13)
 
-# print game.sudoku.stats()
-# while game.sudoku.step() > 0:
-#   pass
-# print ''
-# game.sudoku.draw()
-# print game.sudoku.stats()
-# Logger.show()
+print('start solving')
+print(game.sudoku.stats())
+while game.sudoku.step() > 0:
+  pass
+print('')
+game.sudoku.draw()
+print(game.sudoku.stats())
+Logger.show()
