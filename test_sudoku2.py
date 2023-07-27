@@ -21,21 +21,21 @@ class TestGrid(unittest.TestCase):
         
     def test_column_returns_correct_fields(self):
         for column in range(9):
-            fields = self.grid.column(column)
+            fields = self.grid.column_fields(column)
             self.assertEqual(len(fields), 9)
             for field in fields:
                 self.assertEqual(field.column, column)
 
     def test_row_returns_correct_fields(self):
         for row in range(9):
-            fields = self.grid.row(row)
+            fields = self.grid.row_fields(row)
             self.assertEqual(len(fields), 9)
             for field in fields:
                 self.assertEqual(field.row, row)
 
     def test_square_returns_correct_fields(self):
         for square in range(9):
-            fields = self.grid.square(square)
+            fields = self.grid.square_fields(square)
             self.assertEqual(len(fields), 9)
             for field in fields:
                 self.assertEqual(field.square, square)

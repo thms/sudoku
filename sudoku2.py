@@ -69,23 +69,23 @@ class Grid:
     print('')
 
   # returns all fields in a column from 0 - 8
-  def column(self, index):
+  def column_fields(self, index):
     return self.fields[index : 81 : 9]
 
   # return all fields on a columns first, second or third subdivision
-  def sub_column(self, index, sub_division):
-    return self.column(index)[sub_division * 3 : sub_division * 3 + 3 :1]
+  def sub_column_fields(self, index, sub_division):
+    return self.column_fields(index)[sub_division * 3 : sub_division * 3 + 3 :1]
 
   # returns all fields for a row from 0 - 8
-  def row(self, index):
+  def row_fields(self, index):
     return self.fields[index * 9: index * 9 + 9 : 1]
 
   # returns all fields in a row's first, second or third subdivision
-  def sub_row(self, index, sub_division):
-    return self.row(index)[sub_division * 3 : sub_division * 3 + 3 :1]
+  def sub_row_fields(self, index, sub_division):
+    return self.row_fields(index)[sub_division * 3 : sub_division * 3 + 3 :1]
 
   # returns all fields in a square from 0 - 8, lef to right, then top to bottom
-  def square(self, index):
+  def square_fields(self, index):
     if index < 3:
       start = index * 3
     elif index < 6:
@@ -96,9 +96,10 @@ class Grid:
     self.fields[start + 9], self.fields[start + 10], self.fields[start + 11],
     self.fields[start + 18], self.fields[start + 19], self.fields[start + 20]]
 
+  # assign the fields to squares
   def set_squares(self):
     for i in range(9):
-      for field in self.square(i):
+      for field in self.square_fields(i):
         field.square = i
 
   # returns all filled values for a set of fields:
@@ -114,7 +115,7 @@ class Grid:
   # no field may end up with an empty candidate list unless it's value has already be set
   # no area's candidates may be less than the number of empty fields in the area
   def dependent_constraints_violated(self, field, value):
-    areas = [self.column(field.column), self.row(field.row), self.square(field.square)]
+    areas = [self.column_fields(field.column), self.row_fields(field.row), self.square_fields(field.square)]
     # test if removing the candidates leaves any field without candidate:
     for area in areas:
       for area_field in area:
@@ -127,8 +128,8 @@ class Grid:
       if (len(self.candidates(area)) - 1) < (9 - len(self.values(area)) - 1):
         return True
     # test sub areas:
-    areas = [self.sub_row(field.row, 0), self.sub_row(field.row, 1), self.sub_row(field.row, 2),
-              self.sub_column(field.column, 0), self.sub_column(field.column, 1), self.sub_column(field.column, 2)]
+    areas = [self.sub_row_fields(field.row, 0), self.sub_row_fields(field.row, 1), self.sub_row_fields(field.row, 2),
+              self.sub_column_fields(field.column, 0), self.sub_column_fields(field.column, 1), self.sub_column_fields(field.column, 2)]
     for area in areas:
       print(self.values(area), end = ' - ')
       print(self.candidates(area))
@@ -143,7 +144,7 @@ class Grid:
   # update dependent fields candidates when setting a field's value
   # areas are the column, row and square a field is part of
   def update_dependent_candidates(self, field):
-    areas = [self.column(field.column), self.row(field.row), self.square(field.square)]
+    areas = [self.column_fields(field.column), self.row_fields(field.row), self.square_fields(field.square)]
     for area in areas:
       for dependent_field in area:
         try:
