@@ -1,0 +1,38 @@
+recipe
+
+filling with values:
+before:
+list of candidates for all fields is true
+pick field
+if list of candidates.size == 1:
+	field.value = candidates.pop()
+	update candidates for all dependend fields
+else:
+	pick random element from field.candidates
+	update candidates for all dependend fields
+
+
+update candidates for a field
+assume: no constraints are violated
+for area in field.areas:
+ collect values for all fields in areas and remove from field's candidates
+
+update candidates for all fields:
+for field in fields:
+  update_candidates_for_field(field)
+
+missing constraint:
+no field without a value may have a candidate list of zero length
+==> 
+need to try and roll back if the action would result in a zero length list.
+roll back is tricky??
+==> alternative:
+test what would happen but don't do it, if OK then actually do it.
+
+
+The constraints
+each square has exactly set(1:9)
+each row ...
+each column ...
+area can't have fewer distinct candidates than empty fields
+sub-area of row or column can't have fewer canidates than empty fields
