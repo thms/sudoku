@@ -96,6 +96,58 @@ class Column:
         self.values[row] = number
 
 
+# Represents a row of the puzzle, to store candidates and evaluate constraints
+class Row:
+  def __init__(self, index):
+    self.index = index
+    self.numbers_to_assign = [1,2,3,4,5,6,7,8,9]
+    self.values = [None,None,None,None,None,None,None,None,None] # index == row, value == number
+    # Stores for each number (key) in which field (values) it can still be
+    self.candidates = {1: [0,1,2,3,4,5,6,7,8],
+                       2: [0,1,2,3,4,5,6,7,8],
+                       3: [0,1,2,3,4,5,6,7,8],
+                       4: [0,1,2,3,4,5,6,7,8],
+                       5: [0,1,2,3,4,5,6,7,8],
+                       6: [0,1,2,3,4,5,6,7,8],
+                       7: [0,1,2,3,4,5,6,7,8],
+                       8: [0,1,2,3,4,5,6,7,8],
+                       9: [0,1,2,3,4,5,6,7,8]
+                      }
+
+  def update(self, grid):
+    self.update_from_grid(grid)
+    self.assign_values(grid)
+
+  # update state of row from the state of the grid
+  def update_from_grid(self, grid):
+    for field in grid.row_fields(self.index):
+      # if the field in the row has been assigned a value already
+      if field.value != None:
+        self.values[field.row] = field.value
+        self.candidates[field.value] = []
+        if field.value in self.numbers_to_assign:
+          self.numbers_to_assign.remove(field.value)
+        for key in self.candidates.keys():
+          if field.column in self.candidates[key]:
+            self.candidates[key].remove(field.column)
+      else: # field.value == None
+        # field is still unassigned, reduce number of candidates from the corresponding row
+        # remove field from list of caniddates for the number if the row contains the number
+        for column_field in grid.column_fields(field.column):
+          if column_field.value != None and column_field.column in self.candidates[column_field.value]:
+            self.candidates[column_field.value].remove(column_field.column)
+
+
+  # if only a single candidate field left for a number, assign it
+  # called after updating from grid
+  def assign_values(self, grid):
+    for number in self.numbers_to_assign:
+      if len(self.candidates[number]) == 1:
+        column = self.candidates[number].pop()
+        grid.field_by_row_and_column(self.index, column).set_value(number)
+        self.values[column] = number
+
+
 
 
 
@@ -105,11 +157,15 @@ class Grid:
   def __init__(self):
     self.fields = []
     self.columns = []
+    self.rows = []
     for row in range(9):
       for column in range(9):
         self.fields.append(Field(row, column, 0))
-        self.columns.append(Column(column))
     self.set_squares()
+    for area in range(9):
+      self.columns.append(Column(area))
+      self.rows.append(Row(area))
+
 
   def draw(self):
     i = 1
@@ -273,13 +329,14 @@ class Grid:
   def step(self):
     # find and set all fields with a single candidate, until there are no more left
     while True:
-      print('iterating single candidates')
       fields_updated = self.set_single_candidate_fields([*range(81)])
       if fields_updated == 0:
         break
     # apply the column wide constraints
     for column in self.columns:
       column.update(self)
+    for row in self.rows:
+      row.update(self)
     # print(self.columns[1].numbers_to_assign)
     # print(self.columns[1].values)
     # print(self.columns[1].candidates[3])

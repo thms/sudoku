@@ -18,6 +18,10 @@ class TestGrid(unittest.TestCase):
           ]
         cls.grid = Grid()
         cls.grid.set_values(cls.values)
+
+
+    def test_number_of_columns_is_correct(self):
+        self.assertEqual(9, len(self.grid.columns))
         
     def test_column_returns_correct_fields(self):
         for column in range(9):
