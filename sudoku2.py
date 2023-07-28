@@ -37,6 +37,11 @@ class Field:
 
   def linear_index(self):
     return self.row * 9 + self.column 
+  
+  # provides the linear index in the subsquare for this field, 0 - 8
+  def square_index(self):
+    return (self.row % 3) * 3 + (self.column % 3)
+
 
   def __repr__(self):
     if self.value:
@@ -44,7 +49,7 @@ class Field:
     else:
       return ' '
 
-# Represents a column of the puzzle, to store candidates and evaluate constraints
+# Represents a column of the puzzle, to store candidates and implement constraints
 class Column:
   def __init__(self, index):
     self.index = index
@@ -96,12 +101,12 @@ class Column:
         self.values[row] = number
 
 
-# Represents a row of the puzzle, to store candidates and evaluate constraints
+# Represents a row of the puzzle, to store candidates and implement constraints
 class Row:
   def __init__(self, index):
     self.index = index
     self.numbers_to_assign = [1,2,3,4,5,6,7,8,9]
-    self.values = [None,None,None,None,None,None,None,None,None] # index == row, value == number
+    self.values = [None,None,None,None,None,None,None,None,None] # index == column, value == number
     # Stores for each number (key) in which field (values) it can still be
     self.candidates = {1: [0,1,2,3,4,5,6,7,8],
                        2: [0,1,2,3,4,5,6,7,8],
@@ -148,6 +153,57 @@ class Row:
         self.values[column] = number
 
 
+# Represents a 3x3 square of the puzzle, to store candidates and implement constraints
+class Square:
+  def __init__(self, index):
+    self.index = index
+    self.numbers_to_assign = [1,2,3,4,5,6,7,8,9]
+    self.values = [None,None,None,None,None,None,None,None,None] # index == field index left to right top to bottom, value == number
+    # Stores for each number (key) in which field (values) it can still be
+    self.candidates = {1: [0,1,2,3,4,5,6,7,8],
+                       2: [0,1,2,3,4,5,6,7,8],
+                       3: [0,1,2,3,4,5,6,7,8],
+                       4: [0,1,2,3,4,5,6,7,8],
+                       5: [0,1,2,3,4,5,6,7,8],
+                       6: [0,1,2,3,4,5,6,7,8],
+                       7: [0,1,2,3,4,5,6,7,8],
+                       8: [0,1,2,3,4,5,6,7,8],
+                       9: [0,1,2,3,4,5,6,7,8]
+                      }
+
+  def update(self, grid):
+    self.update_from_grid(grid)
+    self.assign_values(grid)
+
+  # update state of the square from the state of the grid
+  # only uses the fields in the square itself.
+  def update_from_grid(self, grid):
+    for field in grid.square_fields(self.index):
+      # if the field in the square has been assigned a value already
+      if field.value != None:
+        self.values[field.square_index()] = field.value
+        self.candidates[field.value] = []
+        if field.value in self.numbers_to_assign:
+          self.numbers_to_assign.remove(field.value)
+        for key in self.candidates.keys():
+          if field.square_index() in self.candidates[key]:
+            self.candidates[key].remove(field.square_index())
+      else: # field.value == None
+        # field is still unassigned, reduce number of candidates from the corresponding row
+        # remove field from list of caniddates for the number if the row contains the number
+        for square_field in grid.square_fields(field.square):
+          if square_field.value != None and square_field.square_index() in self.candidates[square_field.value]:
+            self.candidates[square_field.value].remove(square_field.square_index())
+
+
+  # if only a single candidate field left for a number, assign it
+  # called after updating from grid
+  def assign_values(self, grid):
+    for number in self.numbers_to_assign:
+      if len(self.candidates[number]) == 1:
+        square_index = self.candidates[number].pop()
+        grid.field_by_square_index_and_square(square_index, self.index).set_value(number)
+        self.values[square_index] = number
 
 
 
@@ -158,6 +214,7 @@ class Grid:
     self.fields = []
     self.columns = []
     self.rows = []
+    self.squares = []
     for row in range(9):
       for column in range(9):
         self.fields.append(Field(row, column, 0))
@@ -165,6 +222,7 @@ class Grid:
     for area in range(9):
       self.columns.append(Column(area))
       self.rows.append(Row(area))
+      self.squares.append(Square(area))
 
 
   def draw(self):
@@ -218,6 +276,12 @@ class Grid:
   def field_by_row_and_column(self, row, column):
     return self.fields[row * 9 + column]
 
+  # get field by the square index and the square
+  def field_by_square_index_and_square(self, square_index, square):
+    base_index = (square // 3) * 27 + (square % 3) * 3 # first field in the square
+    index = base_index + (square_index // 3) * 9 + (square_index % 3)
+    return self.fields[index]
+  
   # returns all filled values for a set of fields:
   def values(self, fields):
     return [field.value for field in fields if field.value != None]
@@ -337,9 +401,13 @@ class Grid:
       column.update(self)
     for row in self.rows:
       row.update(self)
-    # print(self.columns[1].numbers_to_assign)
-    # print(self.columns[1].values)
-    # print(self.columns[1].candidates[3])
+    for square in self.squares:
+      square.update(self)
+    # self.squares[6].update_from_grid(self)
+    # print(self.squares[6].numbers_to_assign)
+    # print(self.squares[6].values)
+    # print(self.squares[6].candidates[5])
+    # self.squares[6].assign_values(self)
 
   # returns True if all fields have a value assigned to them
   def is_solved(self):

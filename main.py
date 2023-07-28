@@ -16,6 +16,8 @@ def single_game():
     game.grid.draw()
     game.grid.step()
     game.grid.draw()
+    game.grid.step()
+    game.grid.draw()
 
 # read games from Kaggle data set
 # each line is one game 81 digits puzzle ',' 81 digits solution, 0 represents an empty field
@@ -35,8 +37,8 @@ def kaggle():
         game.grid.step()
         game.grid.step()
         game.grid.step()
-        game.grid.step()
         game.grid.draw()
+
         if game.grid.is_solved():
             stats['solved'] += 1
             index += 1
