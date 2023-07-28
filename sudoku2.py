@@ -62,6 +62,10 @@ class Column:
                        9: [0,1,2,3,4,5,6,7,8]
                       }
 
+  def update(self, grid):
+    self.update_from_grid(grid)
+    self.assign_values(grid)
+
   # update state of column from the state of the grid
   def update_from_grid(self, grid):
     for field in grid.column_fields(self.index):
@@ -81,23 +85,6 @@ class Column:
           if row_field.value != None and row_field.row in self.candidates[row_field.value]:
             self.candidates[row_field.value].remove(row_field.row)
 
-
-  # finalize one number into a specific field in the column
-  def set_field(self, number, row):
-    try:
-      self.numbers_to_assign.remove(number)
-    except:
-      pass
-    # no other number can be in that field anymore:
-    for key in self.candidates.keys():
-      try:
-        print(f'remove {row} from {self.candidates[key]}')
-        self.candidates[key].remove(row)
-      except:
-        pass
-    # this number has no more candidates, it is settled:
-    self.candidates[number] = []
-    self.values[row] = number
 
   # if only a single candidate field left for a number, assign it
   # called after updating from grid
@@ -292,8 +279,7 @@ class Grid:
         break
     # apply the column wide constraints
     for column in self.columns:
-      column.update_from_grid(self)
-      column.assign_values(self)
+      column.update(self)
     # print(self.columns[1].numbers_to_assign)
     # print(self.columns[1].values)
     # print(self.columns[1].candidates[3])
