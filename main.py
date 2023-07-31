@@ -37,6 +37,7 @@ def kaggle():
         game.grid.step()
         game.grid.step()
         game.grid.step()
+        game.grid.step()
         game.grid.draw()
 
         if game.grid.is_solved():
