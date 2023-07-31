@@ -97,7 +97,9 @@ class Column:
     for number in self.numbers_to_assign:
       if len(self.candidates[number]) == 1:
         row = self.candidates[number].pop()
-        grid.field_by_row_and_column(row, self.index).set_value(number)
+        field = grid.field_by_row_and_column(row, self.index)
+        field.set_value(number)
+        grid.update_dependent_candidates(field)
         self.values[row] = number
 
 
@@ -149,7 +151,9 @@ class Row:
     for number in self.numbers_to_assign:
       if len(self.candidates[number]) == 1:
         column = self.candidates[number].pop()
-        grid.field_by_row_and_column(self.index, column).set_value(number)
+        field = grid.field_by_row_and_column(self.index, column)
+        field.set_value(number)
+        grid.update_dependent_candidates(field)
         self.values[column] = number
 
 
@@ -202,7 +206,9 @@ class Square:
     for number in self.numbers_to_assign:
       if len(self.candidates[number]) == 1:
         square_index = self.candidates[number].pop()
-        grid.field_by_square_index_and_square(square_index, self.index).set_value(number)
+        field = grid.field_by_square_index_and_square(square_index, self.index)
+        field.set_value(number)
+        grid.update_dependent_candidates(field)
         self.values[square_index] = number
 
 
