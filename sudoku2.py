@@ -89,9 +89,12 @@ class Column:
       else: # field.value == None
         # field is still unassigned, reduce number of candidates from the corresponding row
         # remove field from list of caniddates for the number if the row contains the number
+        for column_field in grid.column_fields(field.column):
+          if column_field.value != None and field.row in self.candidates[column_field.value]:
+            self.candidates[column_field.value].remove(field.row)
         for row_field in grid.row_fields(field.row):
           if row_field.value != None and row_field.row in self.candidates[row_field.value]:
-            self.candidates[row_field.value].remove(row_field.row)
+            self.candidates[row_field.value].remove(field.row)
         for square_field in grid.square_fields(field.square):
           if square_field.value != None and field.row in self.candidates[square_field.value]:
             self.candidates[square_field.value].remove(field.row)
@@ -151,8 +154,11 @@ class Row:
         # field is still unassigned, reduce number of candidates from the corresponding row
         # remove field from list of candidates for the number if the row contains the number
         for column_field in grid.column_fields(field.column):
-          if column_field.value != None and column_field.column in self.candidates[column_field.value]:
-            self.candidates[column_field.value].remove(column_field.column)
+          if column_field.value != None and field.column in self.candidates[column_field.value]:
+            self.candidates[column_field.value].remove(field.column)
+        for row_field in grid.row_fields(field.row):
+          if row_field.value != None and field.column in self.candidates[row_field.value]:
+            self.candidates[row_field.value].remove(field.column)
         for square_field in grid.square_fields(field.square):
           if square_field.value != None and field.column in self.candidates[square_field.value]:
             self.candidates[square_field.value].remove(field.column)
@@ -209,18 +215,17 @@ class Square:
           if field.square_index() in self.candidates[key]:
             self.candidates[key].remove(field.square_index())
       else: # field.value == None
-        # field is still unassigned, reduce number of candidates from the corresponding row
-        # remove field from list of caniddates for the number if the row contains the number
-        # TODO: probably wrong
+        # field is still unassigned, reduce number of candidates from the corresponding square
+        # remove field from list of candidates for the number if the row contains the number
         for square_field in grid.square_fields(field.square):
-          if square_field.value != None and square_field.square_index() in self.candidates[square_field.value]:
-            self.candidates[square_field.value].remove(square_field.square_index())
-        # for row_field in grid.row_fields(field.row):
-        #   if row_field.value != None and row_field.row in self.candidates[row_field.value]:
-        #     self.candidates[row_field.value].remove(row_field.row)
-        # for column_field in grid.column_fields(field.column):
-        #   if column_field.value != None and column_field.column in self.candidates[column_field.value]:
-        #     self.candidates[column_field.value].remove(column_field.column)
+          if square_field.value != None and field.square_index() in self.candidates[square_field.value]:
+            self.candidates[square_field.value].remove(field.square_index())
+        for row_field in grid.row_fields(field.row):
+          if row_field.value != None and field.square_index() in self.candidates[row_field.value]:
+            self.candidates[row_field.value].remove(field.square_index())
+        for column_field in grid.column_fields(field.column):
+          if column_field.value != None and field.square_index() in self.candidates[column_field.value]:
+            self.candidates[column_field.value].remove(field.square_index())
 
 
   # if only a single candidate field left for a number, assign it
@@ -455,6 +460,14 @@ class Grid:
   # returns True if all fields have a value assigned to them
   def is_solved(self):
     return all(field.value != None for field in self.fields) and not self.constraints_violated()
+  
+  def number_of_fields_filled(self):
+    retval = 0
+    for field in self.fields:
+      if field.value != None:
+        retval += 1 
+    return retval
+
     
 
 # Randomly generate a game and then try and solve it.

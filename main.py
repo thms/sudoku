@@ -25,7 +25,7 @@ def kaggle():
     file = open('sudoku_unsolved.csv','r')
     data = file.readlines()
     file.close()
-    #outfile = open('sudoku_unsolved.csv','w')
+   # outfile = open('sudoku_unsolved.csv','w')
     stats = {'solved': 0, 'not_solved': 0}
     index = 0
     for puzzle in data:
@@ -48,8 +48,9 @@ def kaggle():
             index += 1
         else:
             stats['not_solved'] +=1
+            print('fields filled: ', game.grid.number_of_fields_filled())
             #outfile.writelines(puzzle)
-            break
+            #break
         print('================================')
     print(index)
     print(stats)
