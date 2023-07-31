@@ -22,9 +22,10 @@ def single_game():
 # read games from Kaggle data set
 # each line is one game 81 digits puzzle ',' 81 digits solution, 0 represents an empty field
 def kaggle():
-    file = open('sudoku10000.csv','r')
+    file = open('sudoku_unsolved.csv','r')
     data = file.readlines()
     file.close()
+    #outfile = open('sudoku_unsolved.csv','w')
     stats = {'solved': 0, 'not_solved': 0}
     index = 0
     for puzzle in data:
@@ -38,17 +39,21 @@ def kaggle():
         game.grid.step()
         game.grid.step()
         game.grid.step()
+        game.grid.step()
         game.grid.draw()
+        print(game.grid.rows[0].candidates[5])
 
         if game.grid.is_solved():
             stats['solved'] += 1
             index += 1
         else:
             stats['not_solved'] +=1
-            #break
+            #outfile.writelines(puzzle)
+            break
         print('================================')
     print(index)
     print(stats)
+    #outfile.close()
 
 # auto_generate()
 # single_game()

@@ -71,6 +71,9 @@ class Column:
     self.update_from_grid(grid)
     self.assign_values(grid)
 
+  def fields(self, grid):
+    return grid.column_fields(self.index)
+
   # update state of column from the state of the grid
   def update_from_grid(self, grid):
     for field in grid.column_fields(self.index):
@@ -89,6 +92,9 @@ class Column:
         for row_field in grid.row_fields(field.row):
           if row_field.value != None and row_field.row in self.candidates[row_field.value]:
             self.candidates[row_field.value].remove(row_field.row)
+        for square_field in grid.square_fields(field.square):
+          if square_field.value != None and field.row in self.candidates[square_field.value]:
+            self.candidates[square_field.value].remove(field.row)
 
 
   # if only a single candidate field left for a number, assign it
@@ -124,6 +130,9 @@ class Row:
   def update(self, grid):
     self.update_from_grid(grid)
     self.assign_values(grid)
+  
+  def fields(self, grid):
+    return grid.row_fields(self.index)
 
   # update state of row from the state of the grid
   def update_from_grid(self, grid):
@@ -134,15 +143,19 @@ class Row:
         self.candidates[field.value] = []
         if field.value in self.numbers_to_assign:
           self.numbers_to_assign.remove(field.value)
+          # remove this field from candidates of other numbers for this column
         for key in self.candidates.keys():
           if field.column in self.candidates[key]:
             self.candidates[key].remove(field.column)
       else: # field.value == None
         # field is still unassigned, reduce number of candidates from the corresponding row
-        # remove field from list of caniddates for the number if the row contains the number
+        # remove field from list of candidates for the number if the row contains the number
         for column_field in grid.column_fields(field.column):
           if column_field.value != None and column_field.column in self.candidates[column_field.value]:
             self.candidates[column_field.value].remove(column_field.column)
+        for square_field in grid.square_fields(field.square):
+          if square_field.value != None and field.column in self.candidates[square_field.value]:
+            self.candidates[square_field.value].remove(field.column)
 
 
   # if only a single candidate field left for a number, assign it
@@ -179,6 +192,9 @@ class Square:
     self.update_from_grid(grid)
     self.assign_values(grid)
 
+  def fields(self, grid):
+    return grid.square_fields(self.index)
+
   # update state of the square from the state of the grid
   # only uses the fields in the square itself.
   def update_from_grid(self, grid):
@@ -195,9 +211,16 @@ class Square:
       else: # field.value == None
         # field is still unassigned, reduce number of candidates from the corresponding row
         # remove field from list of caniddates for the number if the row contains the number
+        # TODO: probably wrong
         for square_field in grid.square_fields(field.square):
           if square_field.value != None and square_field.square_index() in self.candidates[square_field.value]:
             self.candidates[square_field.value].remove(square_field.square_index())
+        # for row_field in grid.row_fields(field.row):
+        #   if row_field.value != None and row_field.row in self.candidates[row_field.value]:
+        #     self.candidates[row_field.value].remove(row_field.row)
+        # for column_field in grid.column_fields(field.column):
+        #   if column_field.value != None and column_field.column in self.candidates[column_field.value]:
+        #     self.candidates[column_field.value].remove(column_field.column)
 
 
   # if only a single candidate field left for a number, assign it
@@ -393,6 +416,20 @@ class Grid:
     for field in self.fields:
       self.update_dependent_candidates(field)
 
+  # evaluate if a given grid violates any of the constraints
+  def constraints_violated(self):
+    violations = 0
+    for row in self.rows:
+      if set([field.value for field in row.fields(self)]) != {1,2,3,4,5,6,7,8,9}:
+        violations += 1
+    for column in self.columns:
+      if set([field.value for field in column.fields(self)]) != {1,2,3,4,5,6,7,8,9}:
+        violations += 1
+    for square in self.squares:
+      if set([field.value for field in square.fields(self)]) != {1,2,3,4,5,6,7,8,9}:
+        violations += 1
+    return violations != 0
+
   # do one step of the solution
   # find a field that has only a single candidate, make that the value and update dependent candidates
   # it is possible that we do not find any fields with single candidates, then we need to guess and backtrack...
@@ -417,7 +454,7 @@ class Grid:
 
   # returns True if all fields have a value assigned to them
   def is_solved(self):
-    return all(field.value != None for field in self.fields)
+    return all(field.value != None for field in self.fields) and not self.constraints_violated()
     
 
 # Randomly generate a game and then try and solve it.
