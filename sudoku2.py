@@ -533,6 +533,12 @@ class Grid:
     for field in self.fields:
       self.update_dependent_candidates(field)
 
+  # serialize game as string
+  # need to replace None with 0
+  def to_s(self):
+    values = [field.value or 0 for field in self.fields]
+    return ''.join(str(value) for value in values)
+  
   # evaluate if a given grid violates any of the constraints
   def constraints_violated(self):
     violations = 0

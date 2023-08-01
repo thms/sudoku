@@ -22,7 +22,7 @@ def single_game():
 # read games from Kaggle data set
 # each line is one game 81 digits puzzle ',' 81 digits solution, 0 represents an empty field
 def kaggle():
-    file = open('sudoku_unsolved.csv','r')
+    file = open('sudoku1.csv','r')
     data = file.readlines()
     file.close()
    # outfile = open('sudoku_unsolved.csv','w')
@@ -34,6 +34,8 @@ def kaggle():
 
         game.grid.set_values(values)
         game.grid.draw()
+        print(game.grid.to_s())
+
         # do a number of steps as long as more fields get solved:
         while True:
             if game.grid.step() == 0:
@@ -41,6 +43,7 @@ def kaggle():
 
         game.grid.draw()
         print(game.grid.columns[2].candidates)
+        print(game.grid.to_s())
 
         if game.grid.is_solved():
             stats['solved'] += 1
