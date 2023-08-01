@@ -72,6 +72,7 @@ class Column:
   def update(self, grid):
     self.update_from_grid(grid)
     self.assign_values(grid)
+    self.assign_values_part_2(grid)
 
   def fields(self, grid):
     return grid.column_fields(self.index)
@@ -115,8 +116,8 @@ class Column:
         self.values[row] = number
         Logger.log(self.candidates)
         self.numbers_to_assign.remove(number)
-    #self.assign_values_part_2(grid)    
 
+  # iterate over all fields to see if there is only a single field in all the candidates and assign it
   def assign_values_part_2(self, grid):
     self.update_from_grid(grid)
     for number in self.numbers_to_assign:
@@ -136,6 +137,7 @@ class Column:
               self.values[row] = number
               self.candidates[number] = []
               self.numbers_to_assign.remove(number)
+              break # number is assigned, move to next number
             except ValueError:
               print("-----")
               grid.draw()
@@ -170,7 +172,8 @@ class Row:
   def update(self, grid):
     self.update_from_grid(grid)
     self.assign_values(grid)
-  
+    self.assign_values_part_2(grid)
+
   def fields(self, grid):
     return grid.row_fields(self.index)
 
@@ -217,22 +220,30 @@ class Row:
           self.numbers_to_assign.remove(number)
         except ValueError:
           raise BaseException
-    # self.update_from_grid(grid)
-    # for number in self.numbers_to_assign:
-    #   if len(self.candidates[number]) > 1:
-    #     # check if any candidate field is the only one left for the other numbers
-    #     for column in self.candidates[number]:
-    #       number_of_candidates = 0
-    #       # iterate over other candidates
-    #       for other_number in self.numbers_to_assign:
-    #         if column in self.candidates[other_number]:
-    #           number_of_candidates += 1
-    #       if number_of_candidates == 1: # self is the only candidate left
-    #         self.candidates[number] = []
-    #         field = grid.field_by_row_and_column(self.index, column)
-    #         field.set_value(number)
-    #         grid.update_dependent_candidates(field)
-    #         self.values[column] = number
+
+  # iterate over all fields to see if there is only a single field in all the candidates and assign it
+  def assign_values_part_2(self, grid):  
+    self.update_from_grid(grid)
+    for number in self.numbers_to_assign:
+      if len(self.candidates[number]) > 1:
+        # check if any candidate field is the only one left for the other numbers
+        for column in self.candidates[number]:
+          number_of_candidates = 0
+          # iterate over other candidates
+          for other_number in self.numbers_to_assign:
+            if column in self.candidates[other_number]:
+              number_of_candidates += 1
+          if number_of_candidates == 1: # self is the only candidate left
+            field = grid.field_by_row_and_column(self.index, column)
+            try:
+              field.set_value(number)
+              grid.update_dependent_candidates(field)
+              self.values[column] = number
+              self.candidates[number] = []
+              self.numbers_to_assign.remove(number)
+              break # number is assigned, move to next number
+            except ValueError:
+              raise BaseException
 
 
 
@@ -260,6 +271,7 @@ class Square:
   def update(self, grid):
     self.update_from_grid(grid)
     self.assign_values(grid)
+    self.assign_values_part_2(grid)
 
   def fields(self, grid):
     return grid.square_fields(self.index)
@@ -307,6 +319,29 @@ class Square:
         except ValueError:
           raise BaseException
 
+  # iterate over all fields to see if there is only a single field in all the candidates and assign it
+  def assign_values_part_2(self, grid):
+    self.update_from_grid(grid)
+    for number in self.numbers_to_assign:
+     if len(self.candidates[number]) > 1:
+        # check if any candidate field is the only one left for the other numbers
+        for index in self.candidates[number]:
+          number_of_candidates = 0
+          # iterate over all candidates
+          for other_number in self.numbers_to_assign:
+            if index in self.candidates[other_number]:
+              number_of_candidates += 1
+          if number_of_candidates == 1: # self is the only candidate left
+            field = grid.field_by_square_index_and_square(index, self.index)
+            try:
+              field.set_value(number)
+              grid.update_dependent_candidates(field)
+              self.values[index] = number
+              self.candidates[number] = []
+              self.numbers_to_assign.remove(number)
+              break # number is assigned, move to next number
+            except ValueError:
+              raise BaseException
 
 
 # represents all fields, and allows access to rows, columns, and squares

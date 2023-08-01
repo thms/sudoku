@@ -48,6 +48,7 @@ def kaggle():
         else:
             stats['not_solved'] +=1
             print('fields filled: ', game.grid.number_of_fields_filled())
+            print(index)
             #outfile.writelines(puzzle)
             #break
         print('================================')
