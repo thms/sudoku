@@ -557,23 +557,38 @@ class Grid:
   # find a field that has only a single candidate, make that the value and update dependent candidates
   # it is possible that we do not find any fields with single candidates, then we need to guess and backtrack...
   def step(self):
-    self.update_candidates_from_grid()
-    fields_before = self.number_of_fields_filled()
-    # find and set all fields with a single candidate, until there are no more left
     while True:
-      fields_updated = self.set_single_candidate_fields([*range(81)])
-      if fields_updated == 0:
+      self.update_candidates_from_grid()
+      fields_before = self.number_of_fields_filled()
+      # find and set all fields with a single candidate, until there are no more left
+      while True:
+        fields_updated = self.set_single_candidate_fields([*range(81)])
+        if fields_updated == 0:
+          break
+      # apply the column wide constraints
+      for column in self.columns:
+        column.update(self)
+      for row in self.rows:
+        row.update(self)
+      for square in self.squares:
+        square.update(self)
+      fields_after = self.number_of_fields_filled()
+      if fields_after - fields_before == 0:
         break
-    # apply the column wide constraints
-    for column in self.columns:
-      column.update(self)
-    for row in self.rows:
-      row.update(self)
-    for square in self.squares:
-      square.update(self)
-    fields_after = self.number_of_fields_filled()
-    return fields_after - fields_before
 
+  # perform a random step, by setting a field to a candidate value
+  # use to break up the game when there are no others
+  def random_step(self):
+    self.update_candidates_from_grid()
+    try:
+      eligible_fields = [field for field in self.fields if field.value == None]
+      field = random.choice(eligible_fields)
+      candidate = random.choice(field.candidates)
+      field.set_value(candidate)
+      self.update_dependent_candidates(field)
+      return True
+    except IndexError:
+      return False
 
   # returns True if all fields have a value assigned to them
   def is_solved(self):
@@ -597,3 +612,27 @@ class Game:
   # Set a randomized, but posssible starting point
   def generate(self, fields_filled):
     self.grid.fill(fields_filled)
+
+  # play the game
+  def play(self):
+    # do a number of determinisitic steps followed by a random step until the puzzle is solved
+    # if doing a random step, store the games state so if that leads to a violation, we can start with another random step from there
+    game_states = []
+    while self.grid.is_solved() == False:
+      try:
+        self.grid.step()
+        if self.grid.is_solved():
+          break
+        else:
+          game_states.insert(0, self.grid.to_s())
+          if self.grid.random_step() == False:
+            break
+      except(BaseException, ValueError): # thrown when the random step leads to a violation later on
+        self.grid.__init__()
+        self.grid.set_values(game_states.pop())
+        if self.grid.random_step() == False:
+          break
+    return self.grid.is_solved()
+    
+    
+

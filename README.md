@@ -10,3 +10,4 @@ Next iteration
 
 Things to eplxore
 adding random moves as tries (requires storing game state)
+best random move: field that has the shortest list of candidates
