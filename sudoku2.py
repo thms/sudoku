@@ -30,6 +30,8 @@ class Field:
     random.shuffle(self.candidates)
 
   def set_value(self, value):
+    if self.value != None:
+      raise ValueError
     self.value = value
     self.candidates = []
     # log event
@@ -109,7 +111,42 @@ class Column:
         field = grid.field_by_row_and_column(row, self.index)
         field.set_value(number)
         grid.update_dependent_candidates(field)
+        Logger.log('Column assigning [{}, {}]: {}'.format(row, self.index, number))
         self.values[row] = number
+        Logger.log(self.candidates)
+        self.numbers_to_assign.remove(number)
+    #self.assign_values_part_2(grid)    
+
+  def assign_values_part_2(self, grid):
+    self.update_from_grid(grid)
+    for number in self.numbers_to_assign:
+     if len(self.candidates[number]) > 1:
+        # check if any candidate field is the only one left for the other numbers
+        for row in self.candidates[number]:
+          number_of_candidates = 0
+          # iterate over all candidates
+          for other_number in self.numbers_to_assign:
+            if row in self.candidates[other_number]:
+              number_of_candidates += 1
+          if number_of_candidates == 1: # self is the only candidate left
+            field = grid.field_by_row_and_column(row, self.index)
+            try:
+              field.set_value(number)
+              grid.update_dependent_candidates(field)
+              self.values[row] = number
+              self.candidates[number] = []
+              self.numbers_to_assign.remove(number)
+            except ValueError:
+              print("-----")
+              grid.draw()
+              print("field.value: ", field.value)
+              print("column: ", self.index)
+              print("row: ", row)
+              print("number: ", number)
+              print("numbers to assign: ",self.numbers_to_assign)
+              print("numbers of candidates: ", number_of_candidates)
+              print("candidates: ", self.candidates)
+              raise BaseException
 
 
 # Represents a row of the puzzle, to store candidates and implement constraints
@@ -169,11 +206,37 @@ class Row:
   def assign_values(self, grid):
     for number in self.numbers_to_assign:
       if len(self.candidates[number]) == 1:
-        column = self.candidates[number].pop()
+        # only single candidate field left on own list
+        column = self.candidates[number][0]
         field = grid.field_by_row_and_column(self.index, column)
-        field.set_value(number)
-        grid.update_dependent_candidates(field)
-        self.values[column] = number
+        try:
+          field.set_value(number)
+          grid.update_dependent_candidates(field)
+          self.values[column] = number
+          self.candidates[number] = []
+          self.numbers_to_assign.remove(number)
+        except ValueError:
+          raise BaseException
+    # self.update_from_grid(grid)
+    # for number in self.numbers_to_assign:
+    #   if len(self.candidates[number]) > 1:
+    #     # check if any candidate field is the only one left for the other numbers
+    #     for column in self.candidates[number]:
+    #       number_of_candidates = 0
+    #       # iterate over other candidates
+    #       for other_number in self.numbers_to_assign:
+    #         if column in self.candidates[other_number]:
+    #           number_of_candidates += 1
+    #       if number_of_candidates == 1: # self is the only candidate left
+    #         self.candidates[number] = []
+    #         field = grid.field_by_row_and_column(self.index, column)
+    #         field.set_value(number)
+    #         grid.update_dependent_candidates(field)
+    #         self.values[column] = number
+
+
+
+
 
 
 # Represents a 3x3 square of the puzzle, to store candidates and implement constraints
@@ -233,11 +296,16 @@ class Square:
   def assign_values(self, grid):
     for number in self.numbers_to_assign:
       if len(self.candidates[number]) == 1:
-        square_index = self.candidates[number].pop()
+        square_index = self.candidates[number][0]
         field = grid.field_by_square_index_and_square(square_index, self.index)
-        field.set_value(number)
-        grid.update_dependent_candidates(field)
-        self.values[square_index] = number
+        try:
+          field.set_value(number)
+          grid.update_dependent_candidates(field)
+          self.values[square_index] = number
+          self.candidates[number] = []
+          self.numbers_to_assign.remove(number)
+        except ValueError:
+          raise BaseException
 
 
 
@@ -324,6 +392,15 @@ class Grid:
   def candidates(self, fields):
     return list(set([candidate for field in fields for candidate in field.candidates ]))
 
+  # update all field candidates from the current values of the grid
+  def update_candidates_from_grid(self):
+    for field in self.fields:
+      field.candidates = [1,2,3,4,5,6,7,8,9]
+    for field in self.fields:
+      self.update_dependent_candidates(field)
+
+  
+
   # evaluates if setting a field to a value would violate any of the constraints
   # constraints are:
   # no field may end up with an empty candidate list unless it's value has already be set
@@ -378,7 +455,7 @@ class Grid:
     return fields_set
 
 
-  # fill the grid with a nset of numbers that do not violate the constraints
+  # fill the grid with a set of numbers that do not violate the constraints
   def fill(self, fields_filled):
     locations = [*range(81)]
     random.shuffle(locations)
@@ -439,6 +516,8 @@ class Grid:
   # find a field that has only a single candidate, make that the value and update dependent candidates
   # it is possible that we do not find any fields with single candidates, then we need to guess and backtrack...
   def step(self):
+    self.update_candidates_from_grid()
+    fields_before = self.number_of_fields_filled()
     # find and set all fields with a single candidate, until there are no more left
     while True:
       fields_updated = self.set_single_candidate_fields([*range(81)])
@@ -451,11 +530,9 @@ class Grid:
       row.update(self)
     for square in self.squares:
       square.update(self)
-    # self.squares[6].update_from_grid(self)
-    # print(self.squares[6].numbers_to_assign)
-    # print(self.squares[6].values)
-    # print(self.squares[6].candidates[5])
-    # self.squares[6].assign_values(self)
+    fields_after = self.number_of_fields_filled()
+    return fields_after - fields_before
+
 
   # returns True if all fields have a value assigned to them
   def is_solved(self):

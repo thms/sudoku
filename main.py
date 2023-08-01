@@ -34,14 +34,13 @@ def kaggle():
 
         game.grid.set_values(values)
         game.grid.draw()
-        game.grid.step()
-        game.grid.step()
-        game.grid.step()
-        game.grid.step()
-        game.grid.step()
-        game.grid.step()
+        # do a number of steps as long as more fields get solved:
+        while True:
+            if game.grid.step() == 0:
+                break
+
         game.grid.draw()
-        print(game.grid.rows[0].candidates[5])
+        print(game.grid.columns[2].candidates)
 
         if game.grid.is_solved():
             stats['solved'] += 1
@@ -52,7 +51,6 @@ def kaggle():
             #outfile.writelines(puzzle)
             #break
         print('================================')
-    print(index)
     print(stats)
     #outfile.close()
 
