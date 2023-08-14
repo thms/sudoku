@@ -7,7 +7,12 @@ Next iteration
 99 of 99
 9733 of 9999
 
+Next iteration: add simple random step
+solves about 9837 of 9999
 
 Things to eplxore
-adding random moves as tries (requires storing game state)
-best random move: field that has the shortest list of candidates
+best random move: field that has the shortest list of candidates, and try each possible candidate before moving to the next field
+
+
+Using python-constraint solves all 10k puzzles.
+https://github.com/python-constraint/python-constraint

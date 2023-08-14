@@ -590,6 +590,26 @@ class Grid:
     except IndexError:
       return False
 
+  # pick a field that has high probabilty of choosing the correct candidate (i.e. least number of candidates left for the field)
+  # returns true if it finds another possible canididate to explore
+  def exploratory_step(self, candidates_tried):
+    self.update_candidates_from_grid()
+    try:
+      eligible_fields = sorted([field for field in self.fields if field.value == None], key = lambda field: len(field.candidates) )
+      for field in eligible_fields:
+        for candidate in field.candidates:
+          if [field.linear_index(), candidate] in candidates_tried:
+            continue
+          else:
+            candidates_tried.append([field.linear_index(), candidate])
+            field.set_value(candidate)
+            self.update_dependent_candidates(field)
+            return True
+      return False
+    except IndexError:
+      return False
+
+
   # returns True if all fields have a value assigned to them
   def is_solved(self):
     return all(field.value != None for field in self.fields) and not self.constraints_violated()
@@ -618,6 +638,7 @@ class Game:
     # do a number of determinisitic steps followed by a random step until the puzzle is solved
     # if doing a random step, store the games state so if that leads to a violation, we can start with another random step from there
     game_states = []
+    candidates_tried = [] # stores field.linear_index -> candidate_value for things that av eeb tried in exploratoty or random steps
     while self.grid.is_solved() == False:
       try:
         self.grid.step()
@@ -625,12 +646,12 @@ class Game:
           break
         else:
           game_states.insert(0, self.grid.to_s())
-          if self.grid.random_step() == False:
+          if self.grid.exploratory_step(candidates_tried) == False:
             break
       except(BaseException, ValueError): # thrown when the random step leads to a violation later on
         self.grid.__init__()
         self.grid.set_values(game_states.pop())
-        if self.grid.random_step() == False:
+        if self.grid.exploratory_step(candidates_tried) == False:
           break
     return self.grid.is_solved()
     
