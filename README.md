@@ -16,3 +16,16 @@ best random move: field that has the shortest list of candidates, and try each p
 
 Using python-constraint solves all 10k puzzles.
 https://github.com/python-constraint/python-constraint
+
+Stats 
+BacktrackingSolver
+{'solved': 9999, 'not_solved': 0}
+python main.py  67.84s user 0.31s system 98% cpu 1:09.12 total
+
+RecursiveBackTrackingSolver
+{'solved': 9999, 'not_solved': 0}
+python main.py  69.30s user 0.27s system 98% cpu 1:10.29 total
+
+MinConflictsSolver
+stopped after 20 minutes ...
+tried a few simple puzzles, does not find ways to solve them....
