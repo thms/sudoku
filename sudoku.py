@@ -1,6 +1,6 @@
 import random
 
-
+# Incomplete, just exploring ideas
 # Purpose: Log events in the game, for debugging and backtracking
 class Logger:
 
