@@ -22,7 +22,7 @@ def single_game():
 
 # read games from Kaggle data set
 # each line is one game 81 digits puzzle ',' 81 digits solution, 0 represents an empty field
-def kaggle():
+def game_aware_constraints():
     file = open('sudoku_unsolved.csv','r')
     data = file.readlines()
     file.close()
@@ -73,5 +73,5 @@ def constraint():
 
 # auto_generate()
 # single_game()
-# kaggle()
+# game_aware_constraints()
 constraint()
